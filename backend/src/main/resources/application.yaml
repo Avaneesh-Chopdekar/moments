@@ -11,6 +11,11 @@ spring:
         hibernate:
             dialect: org.hibernate.dialect.PostgreSQLDialect
 
+    servlet:
+        multipart:
+            max-file-size: 1000MB
+            max-request-size: 1000MB
+
     application:
         name: moments
 
@@ -18,3 +23,7 @@ server:
     port: ${PORT:8080}
     servlet:
         context-path: /api
+
+custom:
+    video:
+        path: ${VIDEO_PATH:videos/}
