@@ -10,5 +10,5 @@ import java.util.Optional;
 @Repository
 public interface PlaylistRepository extends JpaRepository<Playlist, String> {
 
-    Optional<Video> findByTitle(String title);
+    Optional<Playlist> findByName(String name);
 }
