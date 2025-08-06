@@ -9,6 +9,7 @@ spring:
         show-sql: true
         format-sql: true
         hibernate:
+            ddl-auto: ${DB_DDL:update}
             dialect: org.hibernate.dialect.PostgreSQLDialect
 
     servlet:
