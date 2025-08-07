@@ -6,7 +6,15 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="dark" />
-      <Stack />
+      <Stack>
+        <Stack.Screen
+          name="index"
+          options={{
+            headerTitle: "Moments",
+            headerTitleAlign: "center",
+          }}
+        />
+      </Stack>
     </>
   );
 }
