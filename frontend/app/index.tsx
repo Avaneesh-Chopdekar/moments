@@ -6,6 +6,7 @@ import * as Progress from "react-native-progress";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Stack } from "expo-router";
 import axios from "axios";
+import Toast from "react-native-toast-message";
 
 export default function Index() {
   const [video, setVideo] = useState<string | null>(null);
@@ -42,7 +43,10 @@ export default function Index() {
   }, [player]);
 
   const submitDisabled =
-    title.length === 0 || description.length === 0 || video === null;
+    title.length === 0 ||
+    description.length === 0 ||
+    video === null ||
+    uploading;
 
   const handleSubmit = async () => {
     if (submitDisabled) {
@@ -84,12 +88,18 @@ export default function Index() {
         },
       });
       // console.log("Video uploaded successfully");
-      setUploadMessage("Video uploaded successfully");
+      Toast.show({
+        type: "success",
+        text1: "Video uploaded successfully",
+      });
       setTitle("");
       setDescription("");
       setVideo(null);
     } catch (error) {
-      setUploadMessage("Video upload failed");
+      Toast.show({
+        type: "error",
+        text1: "Video uploaded successfully",
+      });
       console.error("Video upload failed", error);
     } finally {
       setUploading(false);
@@ -152,15 +162,12 @@ export default function Index() {
 
         {uploading && (
           <Progress.Circle
-            size={40}
+            size={50}
             progress={uploadProgress}
-            color="blue"
             showsText
             formatText={() => `${uploadProgress}%`}
           />
         )}
-
-        <Text className="text-gray-500">{uploadMessage}</Text>
       </View>
     </>
   );
