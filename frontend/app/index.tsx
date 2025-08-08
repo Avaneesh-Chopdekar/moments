@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button, Text, View, TextInput } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useVideoPlayer, VideoView } from "expo-video";
@@ -8,6 +8,7 @@ export default function Index() {
   const [video, setVideo] = useState<string | null>(null);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const descriptionInputRef = useRef<TextInput | null>(null);
 
   const player = useVideoPlayer(video, (player) => {
     player.loop = true;
@@ -35,6 +36,16 @@ export default function Index() {
     }
   }, [player]);
 
+  const submitDisabled =
+    title.length === 0 || description.length === 0 || video === null;
+
+  const handleSubmit = async () => {
+    if (submitDisabled) {
+      return;
+    }
+    console.log(title, description, video);
+  };
+
   return (
     <>
       <Stack.Screen
@@ -52,6 +63,9 @@ export default function Index() {
           onChangeText={setTitle}
           className="w-full border border-gray-300 p-2"
           placeholderTextColor={"gray"}
+          maxLength={50}
+          onSubmitEditing={() => descriptionInputRef.current?.focus()}
+          enterKeyHint="next"
         />
         <TextInput
           placeholder="Description"
@@ -60,6 +74,8 @@ export default function Index() {
           multiline
           className="w-full border border-gray-300 p-2"
           placeholderTextColor={"gray"}
+          maxLength={200}
+          ref={descriptionInputRef}
         />
         <Button title="Select video from gallery" onPress={pickVideo} />
         {video && (
@@ -74,19 +90,15 @@ export default function Index() {
               player={player}
               allowsFullscreen
               allowsPictureInPicture
-            />
-            <Button
-              title={player.playing ? "Pause" : "Play"}
-              onPress={() => {
-                if (player.playing) {
-                  player.pause();
-                } else {
-                  player.play();
-                }
-              }}
+              startsPictureInPictureAutomatically
             />
           </>
         )}
+        <Button
+          title="Upload Video"
+          onPress={handleSubmit}
+          disabled={submitDisabled}
+        />
       </View>
     </>
   );
