@@ -1,4 +1,4 @@
-package com.anonymous.frontend
+package com.moments.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
