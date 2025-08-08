@@ -1,14 +1,21 @@
 import { useEffect, useState, useRef } from "react";
 import { Button, Text, View, TextInput } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import * as Progress from "react-native-progress";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Stack } from "expo-router";
+import axios from "axios";
 
 export default function Index() {
   const [video, setVideo] = useState<string | null>(null);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const descriptionInputRef = useRef<TextInput | null>(null);
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadMessage, setUploadMessage] = useState("");
 
   const player = useVideoPlayer(video, (player) => {
     player.loop = true;
@@ -22,8 +29,6 @@ export default function Index() {
       aspect: [16, 9],
       quality: 1,
     });
-
-    console.log(result);
 
     if (!result.canceled) {
       setVideo(result.assets[0].uri);
@@ -43,7 +48,52 @@ export default function Index() {
     if (submitDisabled) {
       return;
     }
-    console.log(title, description, video);
+
+    setUploading(true);
+
+    const fileInfo = await FileSystem.getInfoAsync(video);
+    if (!fileInfo.exists) {
+      throw new Error("File not found");
+    }
+
+    const fileName = video.split("/").pop();
+    const fileType = fileName?.split(".").pop();
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("file", {
+      uri: video,
+      name: fileName || `video.${fileType}`,
+      type: `video/${fileType}`, // e.g., video/mp4
+    } as any);
+
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+    try {
+      const response = await axios.post(`${apiUrl}/videos`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress(progressEvent) {
+          const progress = Math.min(
+            100,
+            Math.round((progressEvent.loaded / progressEvent.total!) * 100)
+          );
+          setUploadProgress(progress);
+        },
+      });
+      // console.log("Video uploaded successfully");
+      setUploadMessage("Video uploaded successfully");
+      setTitle("");
+      setDescription("");
+      setVideo(null);
+    } catch (error) {
+      setUploadMessage("Video upload failed");
+      console.error("Video upload failed", error);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -95,10 +145,22 @@ export default function Index() {
           </>
         )}
         <Button
-          title="Upload Video"
+          title={uploading ? "Uploading..." : "Upload Video"}
           onPress={handleSubmit}
           disabled={submitDisabled}
         />
+
+        {uploading && (
+          <Progress.Circle
+            size={40}
+            progress={uploadProgress}
+            color="blue"
+            showsText
+            formatText={() => `${uploadProgress}%`}
+          />
+        )}
+
+        <Text className="text-gray-500">{uploadMessage}</Text>
       </View>
     </>
   );
