@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class VideoServiceImpl implements VideoService {
@@ -40,18 +41,18 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public Video get(String videoId) {
-        return null;
+    public Video get(UUID videoId) {
+        return videoRepository.findById(videoId).orElse(null);
     }
 
     @Override
     public Video getByTitle(String title) {
-        return null;
+        return videoRepository.findByTitle(title).orElse(null);
     }
 
     @Override
     public List<Video> getAll() {
-        return List.of();
+        return videoRepository.findAll();
     }
 
     @Override
