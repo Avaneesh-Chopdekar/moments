@@ -1,5 +1,5 @@
 import { Stack, useRouter } from "expo-router";
-import { Button } from "react-native";
+import { View, Button } from "react-native";
 
 export default function Index() {
   const router = useRouter();
@@ -22,6 +22,15 @@ export default function Index() {
           },
         }}
       />
+
+      <View className="flex-1 justify-center items-center">
+        <Button
+          title="Stream Video"
+          onPress={() => {
+            router.navigate("/stream");
+          }}
+        />
+      </View>
     </>
   );
 }
