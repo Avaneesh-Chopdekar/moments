@@ -3,9 +3,14 @@ package com.moments.backend.controllers;
 import com.moments.backend.entities.Video;
 import com.moments.backend.payload.CustomMessage;
 import com.moments.backend.services.VideoService;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/videos")
@@ -36,5 +41,33 @@ public class VideoController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomMessage<Exception>("Video upload failed", false, e));
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAll() {
+        return ResponseEntity.ok(videoService.getAll());
+    }
+
+    @GetMapping("/stream/{videoId}")
+    public ResponseEntity<?> stream(@PathVariable("videoId") UUID videoId) {
+        Video video = videoService.get(videoId);
+        if (video == null) {
+            return ResponseEntity.badRequest().body(new CustomMessage<String>("Video not found", false, null));
+        }
+
+        String contentType = video.getContentType();
+        String filePath = video.getFilePath();
+
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        Resource resource = new FileSystemResource(filePath);
+
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
+
     }
 }
