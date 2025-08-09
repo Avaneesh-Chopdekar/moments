@@ -1,8 +1,13 @@
 package com.moments.backend.controllers;
 
+import java.io.IOException;
+
+import com.moments.backend.AppConstants;
 import com.moments.backend.entities.Video;
 import com.moments.backend.payload.CustomMessage;
 import com.moments.backend.services.VideoService;
+
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -34,8 +39,7 @@ public class VideoController {
     public ResponseEntity<CustomMessage<?>> create(
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title,
-            @RequestParam("description") String description
-    ) {
+            @RequestParam("description") String description) {
         try {
             Video video = new Video();
             video.setTitle(title);
@@ -81,8 +85,7 @@ public class VideoController {
     @GetMapping("/stream/range/{videoId}")
     public ResponseEntity<Resource> streamVideoRange(
             @PathVariable("videoId") UUID videoId,
-            @RequestHeader(value = "Range", required = false) String range
-    ) {
+            @RequestHeader(value = "Range", required = false) String range) {
         Video video = videoService.get(videoId);
         if (video == null) {
             return ResponseEntity.badRequest().body(null);
@@ -109,44 +112,45 @@ public class VideoController {
         long rangeStart, rangeEnd;
         String[] values = range.replace("bytes=", "").split("-");
         rangeStart = Long.parseLong(values[0]);
-        if (values.length > 1) {
-            rangeEnd = Long.parseLong(values[1]);
-        } else {
+        rangeEnd = rangeStart + AppConstants.CHUNK_SIZE - 1;
+
+        if (rangeEnd >= fileLength) {
             rangeEnd = fileLength - 1;
         }
 
-        if (rangeEnd > fileLength - 1) {
-            rangeEnd = fileLength - 1;
-        }
-
-//        System.out.println("LOG: Range Start -" + rangeStart);
-//        System.out.println("LOG: Range End -" + rangeEnd);
+        // System.out.println("LOG: Range Start = " + rangeStart);
+        // System.out.println("LOG: Range End = " + rangeEnd);
 
         InputStream inputStream;
 
         try {
             inputStream = Files.newInputStream(path);
             inputStream.skip(rangeStart);
-        } catch (Exception e) {
+
+            long contentLength = rangeEnd - rangeStart + 1;
+
+            byte[] buffer = new byte[(int) contentLength];
+            int read = inputStream.read(buffer, 0, buffer.length);
+            // System.out.println("LOG: Content Length = " + contentLength);
+            // System.out.println("LOG: Read = " + read);
+            inputStream.close();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Range", "bytes " + rangeStart + "-" + rangeEnd + "/" + fileLength);
+            headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+            headers.add("Pragma", "no-cache");
+            headers.add("Expires", "0");
+            headers.add("X-Content-Type-Options", "nosniff");
+            headers.setContentLength(contentLength);
+
+            return ResponseEntity
+                    .status(HttpStatus.PARTIAL_CONTENT)
+                    .headers(headers)
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .contentLength(contentLength)
+                    .body(new ByteArrayResource(buffer));
+        } catch (IOException e) {
             return ResponseEntity.internalServerError().build();
         }
-
-        long contentLength = rangeEnd - rangeStart + 1;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Range", "bytes " + rangeStart + "-" + rangeEnd + "/" + fileLength);
-        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        headers.add("Pragma", "no-cache");
-        headers.add("Expires", "0");
-        headers.add("X-Content-Type-Options", "nosniff");
-        headers.setContentLength(contentLength);
-
-        return ResponseEntity
-                .status(HttpStatus.PARTIAL_CONTENT)
-                .headers(headers)
-                .contentType(MediaType.parseMediaType(contentType))
-                .contentLength(contentLength)
-                .body(new InputStreamResource(inputStream));
-
     }
 }
