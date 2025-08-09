@@ -8,7 +8,7 @@ export default function Stream() {
     "cefc3391-a28a-4f2f-84fe-942663b972d0"
   );
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  const videoURL = `${apiUrl}/videos/stream/${videoId}`;
+  const videoURL = `${apiUrl}/videos/stream/range/${videoId}`;
 
   const player = useVideoPlayer(videoURL, (player) => {
     player.loop = true;
