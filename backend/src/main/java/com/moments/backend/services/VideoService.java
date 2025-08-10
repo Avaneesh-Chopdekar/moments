@@ -16,4 +16,6 @@ public interface VideoService {
     List<Video> getAll();
 
     Video save(Video video, MultipartFile file) throws IOException;
+
+    void processVideo(UUID videoId);
 }
