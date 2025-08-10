@@ -7,6 +7,7 @@ import com.moments.backend.entities.Video;
 import com.moments.backend.payload.CustomMessage;
 import com.moments.backend.services.VideoService;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
@@ -29,6 +30,9 @@ import java.util.UUID;
 @CrossOrigin("*")
 public class VideoController {
 
+    @Value("${custom.video.hls_path}")
+    String HLS_DIR;
+
     private final VideoService videoService;
 
     public VideoController(VideoService videoService) {
@@ -48,7 +52,7 @@ public class VideoController {
             if (savedVideo != null) {
                 return ResponseEntity.ok().body(new CustomMessage<Video>("Video upload successfully", true, video));
             }
-            return ResponseEntity.ok(new CustomMessage<String>("Video uploaded successfully", false, null));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new CustomMessage<String>("Video uploaded successfully", false, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomMessage<Exception>("Video upload failed", false, e));
         }
@@ -152,5 +156,42 @@ public class VideoController {
         } catch (IOException e) {
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @GetMapping("/{videoId}/master.m3u8")
+    public ResponseEntity<Resource> serveMasterFile(@PathVariable UUID videoId) {
+        Path path = Paths.get(HLS_DIR, videoId.toString(), "master.m3u8");
+
+        if (!Files.exists(path)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Resource resource = new FileSystemResource(path);
+
+        return ResponseEntity
+                .ok()
+                .header(
+                        HttpHeaders.CONTENT_TYPE, "application/vnd.apple.mpegurl"
+                )
+                .body(resource);
+    }
+
+    @GetMapping("/{videoId}/{segment}.ts")
+    public ResponseEntity<Resource> serveSegment(
+            @PathVariable UUID videoId,
+            @PathVariable String segment
+    ) {
+        Path path = Paths.get(HLS_DIR, videoId.toString(), segment + ".ts");
+        if (!Files.exists(path)) {
+            return ResponseEntity.notFound().build();
+        }
+        Resource resource = new FileSystemResource(path);
+
+        return ResponseEntity
+                .ok()
+                .header(
+                        HttpHeaders.CONTENT_TYPE, "video/mp2t"
+                )
+                .body(resource);
     }
 }
