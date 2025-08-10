@@ -28,3 +28,4 @@ server:
 custom:
     video:
         path: ${VIDEO_PATH:videos/}
+        hls_path: ${VIDEO_HLS_PATH:videos_hls/}
