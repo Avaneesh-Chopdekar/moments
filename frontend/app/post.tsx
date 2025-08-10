@@ -80,6 +80,7 @@ export default function Post() {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        timeout: 300000,
         onUploadProgress(progressEvent) {
           const progress = Math.min(
             100,
@@ -96,10 +97,11 @@ export default function Post() {
       setTitle("");
       setDescription("");
       setVideo(null);
+      router.back();
     } catch (error) {
       Toast.show({
         type: "error",
-        text1: "Video uploaded successfully",
+        text1: "Video uploading failed",
       });
       console.error("Video upload failed", error);
     } finally {
