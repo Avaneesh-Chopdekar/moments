@@ -6,3 +6,4 @@
 - Spring Boot
 - PostgreSQL
 - Docker
+- FFmpeg
