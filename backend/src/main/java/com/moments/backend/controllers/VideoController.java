@@ -7,6 +7,7 @@ import com.moments.backend.entities.Video;
 import com.moments.backend.payload.CustomMessage;
 import com.moments.backend.services.VideoService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
@@ -23,11 +24,13 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/videos")
 @CrossOrigin("*")
+@Tag(name = "Video API")
 public class VideoController {
 
     @Value("${custom.video.hls_path}")
@@ -193,5 +196,23 @@ public class VideoController {
                         HttpHeaders.CONTENT_TYPE, "video/mp2t"
                 )
                 .body(resource);
+    }
+
+    @PatchMapping("/{videoId}")
+    public ResponseEntity<CustomMessage<Video>> update(@PathVariable UUID videoId, @RequestBody Map<String, Object> updates) {
+        Video updatedVideo = videoService.update(videoId, updates);
+        return ResponseEntity.ok().body(
+                new CustomMessage<Video>(
+                        "Video information updated successfully",
+                        true,
+                        updatedVideo
+                )
+        );
+    }
+
+    @DeleteMapping("/{videoId}")
+    public ResponseEntity<?> delete(@PathVariable UUID videoId) {
+        videoService.delete(videoId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

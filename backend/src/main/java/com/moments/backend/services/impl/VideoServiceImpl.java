@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -157,5 +158,27 @@ public class VideoServiceImpl implements VideoService {
         }
 
 
+    }
+
+    @Override
+    public Video update(UUID videoId, Map<String, Object> updates) {
+        Video video = videoRepository.findById(videoId).orElseThrow(() -> new RuntimeException("Video not found"));
+        updates.forEach((key, value) -> {
+            switch (key) {
+                case "title":
+                    video.setTitle((String) value);
+                    break;
+                case "description":
+                    video.setDescription((String) value);
+                    break;
+            }
+        });
+        return videoRepository.save(video);
+    }
+
+    @Override
+    public void delete(UUID videoId) {
+        Video video = videoRepository.findById(videoId).orElseThrow(() -> new RuntimeException("Video not found"));
+        videoRepository.delete(video);
     }
 }
