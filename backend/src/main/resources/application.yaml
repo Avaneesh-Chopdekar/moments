@@ -21,9 +21,13 @@ spring:
         name: moments
 
 server:
-    port: ${PORT:8080}
     servlet:
         context-path: /api
+    port: ${PORT:8080}
+
+springdoc:
+    swagger-ui:
+        path: /docs
 
 custom:
     video:
