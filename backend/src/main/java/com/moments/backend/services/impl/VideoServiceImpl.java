@@ -1,10 +1,13 @@
 package com.moments.backend.services.impl;
 
 import com.moments.backend.entities.Video;
+import com.moments.backend.enums.Visibility;
 import com.moments.backend.repositories.VideoRepository;
 import com.moments.backend.services.VideoService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.util.StringUtils;
@@ -54,11 +57,6 @@ public class VideoServiceImpl implements VideoService {
     @Override
     public Video get(UUID videoId) {
         return videoRepository.findById(videoId).orElse(null);
-    }
-
-    @Override
-    public Video getByTitle(String title) {
-        return videoRepository.findByTitle(title).orElse(null);
     }
 
     @Override
@@ -180,5 +178,44 @@ public class VideoServiceImpl implements VideoService {
     public void delete(UUID videoId) {
         Video video = videoRepository.findById(videoId).orElseThrow(() -> new RuntimeException("Video not found"));
         videoRepository.delete(video);
+    }
+
+    @Override
+    public Page<Video> getAllPublicVideos(Pageable pageable) {
+        return videoRepository.findByVisibility(Visibility.PUBLIC, pageable);
+    }
+
+    @Override
+    public Page<Video> searchPublicVideos(String query, Pageable pageable) {
+        return videoRepository.findByTitleContainingIgnoreCaseAndVisibility(query, Visibility.PUBLIC, pageable);
+    }
+
+    @Override
+    public Video incrementViews(UUID videoId) {
+        Video video = this.get(videoId);
+        video.setViews(video.getViews() + 1);
+        return videoRepository.save(video);
+    }
+
+    @Override
+    public Video likeVideo(UUID videoId) {
+        Video video = this.get(videoId);
+        // In a real system, a separate Like/Dislike entity
+        // to ensure a user can only like/dislike once and track their specific action.
+        video.setLikes(video.getLikes() + 1);
+        return videoRepository.save(video);
+    }
+
+    @Override
+    public Video dislikeVideo(UUID videoId) {
+        Video video = this.get(videoId);
+        video.setDislikes(video.getDislikes() + 1);
+        return videoRepository.save(video);
+    }
+
+    @Override
+    public List<Video> getTrendingVideos() {
+        // This is a simple trending logic. Real trending would be more complex.
+        return videoRepository.findTop10ByOrderByViewsDesc();
     }
 }
