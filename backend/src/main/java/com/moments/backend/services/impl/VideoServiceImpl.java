@@ -61,7 +61,12 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public List<Video> getAll() {
-        return videoRepository.findAll();
+        try {
+            return videoRepository.findAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
     }
 
     @Override
