@@ -33,3 +33,7 @@ custom:
     video:
         path: ${VIDEO_PATH:videos/}
         hls_path: ${VIDEO_HLS_PATH:videos_hls/}
+    auth:
+        jwt-secret: ${JWT_SECRET}
+        access-token-expiration: ${ACCESS_TOKEN_EXPIRATION}
+        refresh-token-expiration: ${REFRESH_TOKEN_EXPIRATION}
